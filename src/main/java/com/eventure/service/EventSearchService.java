@@ -1,5 +1,6 @@
 package com.eventure.service;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.DateRangeQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.GeoDistanceQuery;
@@ -44,6 +45,14 @@ public class EventSearchService {
             boolQuery.should(Query.of(q -> q.match(titleMatch)))
                     .should(Query.of(q -> q.match(descMatch)))
                     .minimumShouldMatch("1");
+        }
+
+        // tags match
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+            boolQuery.must(Query.of(q -> q.terms(t -> t
+                    .field("tags.keyword")
+                    .terms(ts -> ts.value(request.getTags().stream().map(FieldValue::of).toList()))
+            )));
         }
 
         // City match
